@@ -13,20 +13,34 @@ StudentAI::StudentAI(int col,int row,int p)
 
 Move StudentAI::GetMove(Move move)
 {
+	//update our board
     if (move.seq.empty())
     {
         player = 1;
     } else{
         board.makeMove(move,player == 1?2:1);
     }
+	
+	//
+
     vector<vector<Move> > moves = board.getAllPossibleMoves(player);
-    int i = rand() % (moves.size());
+	for (int checkerNum = 0; chekcerNum < moves.size(); checkerNum++) 
+	{
+		for (int moveNum = 0; moveNum < moves[checkerNum].size(); moveNum++)
+		{
+			//make child of root
+		}
+	}
+    
+	//random AI 
+	int i = rand() % (moves.size());
     vector<Move> checker_moves = moves[i];
     int j = rand() % (checker_moves.size());
     Move res = checker_moves[j];
-    board.makeMove(res,player);
+    
+	
+	
+	board.makeMove(res,player);
     return res;
-
-
 }
 
