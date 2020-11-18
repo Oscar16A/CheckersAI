@@ -12,6 +12,9 @@ public:
     Board board;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
+
+private:
+	int Simulate(Board boardCopy, int turnPlayer);
 };
 
 #endif //STUDENTAI_H
