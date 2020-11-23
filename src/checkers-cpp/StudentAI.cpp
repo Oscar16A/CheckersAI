@@ -62,7 +62,7 @@ Move StudentAI::GetMove(Move move)
 		}
 	};
 
-	vector<Node*> nodeVector;
+	vector<Node*> NodeVector;
 
 	vector<vector<Move>> moves = board.getAllPossibleMoves(player);
 	for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++)
@@ -76,21 +76,21 @@ Move StudentAI::GetMove(Move move)
 
 			Node* node = new Node(move, boardCopy, turnPlayer, 0, 0);
 
-			nodeVector.push_back(node);
+			NodeVector.push_back(node);
 		}
 	}
 
-	Move bestMove = moves[0][0];
+	Move bestMove;
 	int  mostWins = -1;
-	for (int node = 0; node < nodeVector.size(); node++)
+	for (int node = 0; node < NodeVector.size(); node++)
 	{
 		int winCount = 0;
 		for (int i = 0; i < 50; i++) //run 50 simulations
 		{
 			int result = board.isWin(player);
 
-			Board board = nodeVector[node]->board;
-			int turnPlayer = nodeVector[node]->turnPlayer;
+			Board board = NodeVector[node]->board;
+			int turnPlayer = NodeVector[node]->turnPlayer;
 
 			if (result == 0)
 			{
@@ -106,9 +106,11 @@ Move StudentAI::GetMove(Move move)
 		if (winCount > mostWins)
 		{
 			mostWins = winCount;
-			bestMove = nodeVector[node]->move;
+			bestMove = NodeVector[node]->move;
 		}
 	}
+
+
 
 
 
@@ -154,13 +156,12 @@ Move StudentAI::GetMove(Move move)
 		}
 	}
     */
-	
-	for (int node = 0; node < nodeVector.size(); node++)
+
+	for (int node = 0; node < NodeVector.size(); node++)
 	{
-		delete nodeVector[node];
+		delete NodeVector[node];
 	}
-	
-	
+
 	board.makeMove(bestMove,player);
     return bestMove;
 }
