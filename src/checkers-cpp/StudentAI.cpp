@@ -44,7 +44,6 @@ Move StudentAI::GetMove(Move move)
         board.makeMove(move,player == 1?2:1);
     }
 	
-	
 	struct Node {
 		Move move;
 		Board board;
@@ -63,7 +62,7 @@ Move StudentAI::GetMove(Move move)
 		}
 	};
 
-	vector<Node> NodeVector;
+	vector<Node> nodeVector;
 
 	vector<vector<Move>> moves = board.getAllPossibleMoves(player);
 	for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++)
@@ -75,9 +74,7 @@ Move StudentAI::GetMove(Move move)
 			boardCopy.makeMove(move, player); //make our move
 			int turnPlayer = player == 1 ? 2 : 1; // opponents turn
 
-			Node node = Node(move, boardCopy, turnPlayer, 0, 0);
-
-			NodeVector.push_back(node);
+			nodeVector.push_back(Node(move, boardCopy, turnPlayer, 0, 0));
 		}
 	}
 	
@@ -87,15 +84,15 @@ Move StudentAI::GetMove(Move move)
 	//for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++)
 	{
 		//for (int moveNum = 0; moveNum < moves[checkerNum].size(); moveNum++) //for each move
-		for (int node = 0; node < NodeVector.size(); node++)
+		for (int node = 0; node < nodeVector.size(); node++)
 		{
 			int winCount = 0;
 			for (int i = 0; i < 50; i++) //run 50 simulations
 			{
 				int result = board.isWin(player);
 
-				Board board = NodeVector[node].board;
-				int turnPlayer = NodeVector[node].turnPlayer;
+				Board board = nodeVector[node].board;
+				int turnPlayer = nodeVector[node].turnPlayer;
 				//Board boardF = board;
 				//int turnPlayerF = player == 1 ? 2 : 1;
 
@@ -113,7 +110,7 @@ Move StudentAI::GetMove(Move move)
 			if (winCount > mostWins)
 			{
 				mostWins = winCount;
-				bestMove = NodeVector[node].move;
+				bestMove = nodeVector[node].move;
 				//bestMove = moves[checkerNum][moveNum];
 			}
 		}
