@@ -12,6 +12,21 @@ StudentAI::StudentAI(int col,int row,int p)
     player = 2;
 }
 
+/*
+Node::Node(Move move_, Board board_, int turnPlayer_, int winCountOfOtherPlayer_, int playOuts_)
+{
+	move = move_;
+	board = board_;
+	turnPlayer = turnPlayer_;
+	winCountOfOtherPlayer = winCountOfOtherPlayer_;
+	playOuts = playOuts_;
+}
+*/
+Node StudentAI::Selection(Node node)
+{
+	return node;
+}
+
 int StudentAI::Simulate(Board boardCopy, Move move, int turnPlayer)
 {
 	boardCopy.makeMove(move, player);
@@ -44,24 +59,6 @@ Move StudentAI::GetMove(Move move)
     } else{
         board.makeMove(move,player == 1?2:1);
     }
-	
-	struct Node {
-		Move move;
-		Board board;
-		int turnPlayer;
-		int winCountOfOtherPlayer; 
-		int playOuts;
-
-		Node(Move move_, Board board_, int turnPlayer_, int winCountOfOtherPlayer_, int playOuts_)
-			:
-			move(move_),
-			board(board_),
-			turnPlayer(turnPlayer_),
-			winCountOfOtherPlayer(winCountOfOtherPlayer_),
-			playOuts(playOuts_)
-		{
-		}
-	};
 
 	vector<Node> nodeVector;
 
@@ -79,32 +76,18 @@ Move StudentAI::GetMove(Move move)
 		}
 	}
 	
-	//vector<vector<Move>> moves = board.getAllPossibleMoves(player);
 	Move bestMove;
 	int  mostWins = -1;
-	//for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++)
 	{
-		//for (int moveNum = 0; moveNum < moves[checkerNum].size(); moveNum++) //for each move
 		for (int node = 0; node < nodeVector.size(); node++)
 		{
 			int winCount = 0;
 			for (int i = 0; i < 50; i++) //run 50 simulations
 			{
-				int result = board.isWin(player);
-
-				Board boardV = nodeVector[node].board;
+				
 				int turnPlayerV = nodeVector[node].turnPlayer;
-				//Board boardF = board;
 				Move moveV = nodeVector[node].move;
-				//Move moveF = moves[checkerNum][moveNum];
-				//boardF.makeMove(moves[checkerNum][moveNum], player);
-				//int turnPlayerF = player == 1 ? 2 : 1;
-
-				if (result == 0)
-				{
-					result = Simulate(board, moveV, turnPlayerV);
-					//result = Simulate(board, moveF, turnPlayerF);
-				}
+				int result = Simulate(board, moveV, turnPlayerV);
 
 				if (result == player || result == -1)
 				{
@@ -116,16 +99,10 @@ Move StudentAI::GetMove(Move move)
 			{
 				mostWins = winCount;
 				bestMove = nodeVector[node].move;
-				//bestMove = moves[checkerNum][moveNum];
 			}
 		}
 	}
-	/*
-	for (int node = 0; node < nodeVector.size(); node++)
-	{
-		delete nodeVector[node];
-	}
-	*/
+	
 	board.makeMove(bestMove,player);
     return bestMove;
 }
