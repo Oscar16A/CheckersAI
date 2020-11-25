@@ -14,7 +14,7 @@ public:
 	virtual Move GetMove(Move board);
 
 private:
-	int Simulate(Board boardCopy, int turnPlayer);
+	int Simulate(Board boardCopy, Move move, int turnPlayer);
 };
 
 #endif //STUDENTAI_H

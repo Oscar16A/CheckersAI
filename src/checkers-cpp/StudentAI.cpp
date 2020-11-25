@@ -12,9 +12,10 @@ StudentAI::StudentAI(int col,int row,int p)
     player = 2;
 }
 
-int StudentAI::Simulate(Board boardCopy, int turnPlayer)
+int StudentAI::Simulate(Board boardCopy, Move move, int turnPlayer)
 {
-	int result = 0; //2 = white, 1 = black, -1 = tie, 0 = undetermined
+	boardCopy.makeMove(move, player);
+	int result = boardCopy.isWin(player); //2 = white, 1 = black, -1 = tie, 0 = undetermined
 	vector<vector<Move>> possibleMoves;
 	while (result == 0) //repeat until result is determined
 	{
@@ -91,14 +92,18 @@ Move StudentAI::GetMove(Move move)
 			{
 				int result = board.isWin(player);
 
-				Board board = nodeVector[node].board;
-				int turnPlayer = nodeVector[node].turnPlayer;
+				Board boardV = nodeVector[node].board;
+				int turnPlayerV = nodeVector[node].turnPlayer;
 				//Board boardF = board;
+				Move moveV = nodeVector[node].move;
+				//Move moveF = moves[checkerNum][moveNum];
+				//boardF.makeMove(moves[checkerNum][moveNum], player);
 				//int turnPlayerF = player == 1 ? 2 : 1;
 
 				if (result == 0)
 				{
-					result = Simulate(board, turnPlayer);
+					result = Simulate(board, moveV, turnPlayerV);
+					//result = Simulate(board, moveF, turnPlayerF);
 				}
 
 				if (result == player || result == -1)
@@ -116,9 +121,9 @@ Move StudentAI::GetMove(Move move)
 		}
 	}
 	/*
-	for (int node = 0; node < NodeVector.size(); node++)
+	for (int node = 0; node < nodeVector.size(); node++)
 	{
-		delete NodeVector[node];
+		delete nodeVector[node];
 	}
 	*/
 	board.makeMove(bestMove,player);
