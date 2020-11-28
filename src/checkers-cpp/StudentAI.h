@@ -14,6 +14,8 @@ struct Node
 	int winCountOfOtherPlayer;
 	int playOuts;
 	
+	Node() {}
+
 	Node(Move move_, Board board_, int turnPlayer_, int winCountOfOtherPlayer_, int playOuts_)
 	:
 	move(move_),
@@ -29,13 +31,18 @@ class StudentAI :public AI
 {
 public:
     Board board;
+	int winCountOfOtherPlayerB;
+	int playOutsB;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
 	
 private:
 	
-	Node Selection(Node node);
+	Node Selection(vector<Node> node);
+	float GetUCT(Node node);
+	//expansion
 	int Simulate(Board boardCopy, Move move, int turnPlayer);
+	void BackPropagate(int result, Node node);
 	
 };
 

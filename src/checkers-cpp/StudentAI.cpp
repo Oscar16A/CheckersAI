@@ -1,6 +1,7 @@
 #include "StudentAI.h"
 #include <random>
 #include <iostream>
+#include <math.h>
 
 //The following part should be completed by students.
 //The students can modify anything except the class name and exisiting functions and varibles.
@@ -8,6 +9,8 @@ StudentAI::StudentAI(int col,int row,int p)
 	:AI(col, row, p)
 {
     board = Board(col,row,p);
+	winCountOfOtherPlayerB = 0;
+	playOutsB = 0;
     board.initializeGame();
     player = 2;
 }
@@ -22,9 +25,33 @@ Node::Node(Move move_, Board board_, int turnPlayer_, int winCountOfOtherPlayer_
 	playOuts = playOuts_;
 }
 */
-Node StudentAI::Selection(Node node)
+float StudentAI::GetUCT(Node node)//simple, parent is always root node
 {
-	return node;
+	float C = 1.4f;
+	float U = node.winCountOfOtherPlayer;
+	float N = node.playOuts;
+	float Np = winCountOfOtherPlayerB;
+	if (N != 0)
+	{
+		return (U / N) + C * sqrt((log(Np) / N));
+	}
+	return INFINITY;
+}
+
+Node StudentAI::Selection(vector<Node> nodes)
+{
+	Node bestNode;
+	float bestUCT;
+	for (int node = 0; node < nodes.size(); node++)
+	{
+		float currentUCT= GetUCT(nodes[node]);
+		if (currentUCT > bestUCT)
+		{
+			bestUCT = currentUCT;
+			bestNode = nodes[node];
+		}
+	}
+	return bestNode;
 }
 
 int StudentAI::Simulate(Board boardCopy, Move move, int turnPlayer)
@@ -48,6 +75,14 @@ int StudentAI::Simulate(Board boardCopy, Move move, int turnPlayer)
 		turnPlayer = turnPlayer == 1 ? 2 : 1;//switch turn after check for win
 	}
 	return result;
+}
+
+void StudentAI::BackPropagate(int result, Node node)
+{
+	//1 == a player won, 2 == a player won, -1 = tie, 0 = none
+
+
+
 }
 
 Move StudentAI::GetMove(Move move)
