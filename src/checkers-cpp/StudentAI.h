@@ -8,21 +8,29 @@
 //Students can modify anything except the class name and exisiting functions and varibles.
 struct Node
 {
-	Move move;
-	Board board;
-	int turnPlayer;
-	int winCountOfOtherPlayer;
-	int playOuts;
+	Board board; //current board
+	Move move; //last move made on current board
+	int turnPlayer; //turn of player for current board
+
+	float winsOther; //win score of other player
+	int playOuts; //number of simulations that passed through this node
+
+	vector<Node> children; //children of this node
+	Node* parent; //parent of this node
 	
 	Node() {}
 
-	Node(Move move_, Board board_, int turnPlayer_, int winCountOfOtherPlayer_, int playOuts_)
+	Node(Board board_, Move move_, int turnPlayer_, int winsOther_, int playOuts_, vector<Node> children_, Node* parent_)
 	:
-	move(move_),
 	board(board_),
+	move(move_),
 	turnPlayer(turnPlayer_),
-	winCountOfOtherPlayer(winCountOfOtherPlayer_),
-	playOuts(playOuts_)
+
+	winsOther(winsOther_),
+	playOuts(playOuts_),
+
+	children(children_),
+	parent(parent_)
 	{
 	}
 };
@@ -31,19 +39,16 @@ class StudentAI :public AI
 {
 public:
     Board board;
-	int winCountOfOtherPlayerB;
-	int playOutsB;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
 	
-private:
-	
-	Node Selection(vector<Node> node);
-	float GetUCT(Node node);
-	//expansion
-	int Simulate(Board boardCopy, Move move, int turnPlayer);
-	void BackPropagate(int result, Node node);
-	
+private:	
+	Node* Selection(Node* root);
+	Node* SelectionStep(Node* node);
+	float GetUCT(Node& node, float C);
+	Node* Expansion(Node* leaf);
+	int Simulate(Node* child);
+	void BackPropagate(int result, Node* child);
 };
 
 #endif //STUDENTAI_H

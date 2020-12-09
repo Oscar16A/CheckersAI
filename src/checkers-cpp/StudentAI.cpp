@@ -1,3 +1,4 @@
+// Three Fourths MCTS (missing expansion)
 #include "StudentAI.h"
 #include <random>
 #include <iostream>
@@ -9,28 +10,40 @@ StudentAI::StudentAI(int col,int row,int p)
 	:AI(col, row, p)
 {
     board = Board(col,row,p);
-	winCountOfOtherPlayerB = 0;
-	playOutsB = 0;
     board.initializeGame();
     player = 2;
 }
 
-/*
-Node::Node(Move move_, Board board_, int turnPlayer_, int winCountOfOtherPlayer_, int playOuts_)
+Node* StudentAI::Selection(Node* root)
 {
-	move = move_;
-	board = board_;
-	turnPlayer = turnPlayer_;
-	winCountOfOtherPlayer = winCountOfOtherPlayer_;
-	playOuts = playOuts_;
+	while (root->children.empty() == false)
+	{
+		root = SelectionStep(root);
+	}
+	return root; //leaf
 }
-*/
-float StudentAI::GetUCT(Node node)//simple, parent is always root node
+
+Node* StudentAI::SelectionStep(Node* node) //choose best child from node's children
 {
-	float C = 1.4f;
-	float U = node.winCountOfOtherPlayer;
+	Node* bestChild;
+	float bestUCT;
+	for (int i = 0; i < node->children.size(); i++)
+	{
+		float currentUCT = GetUCT(node->children[i], 1.4f);
+		if (currentUCT > bestUCT)
+		{
+			bestUCT = currentUCT;
+			bestChild = &node->children[i];
+		}
+	}
+	return bestChild; 
+}
+
+float StudentAI::GetUCT(Node& node, float C)//assumes parent is always root node, C= 1.4f for selection
+{
+	float U = node.winsOther;
 	float N = node.playOuts;
-	float Np = winCountOfOtherPlayerB;
+	float Np = node.parent->playOuts;
 	if (N != 0)
 	{
 		return (U / N) + C * sqrt((log(Np) / N));
@@ -38,51 +51,104 @@ float StudentAI::GetUCT(Node node)//simple, parent is always root node
 	return INFINITY;
 }
 
-Node StudentAI::Selection(vector<Node> nodes)
+Node* StudentAI::Expansion(Node* leaf)
 {
-	Node bestNode;
-	float bestUCT;
-	for (int node = 0; node < nodes.size(); node++)
+	int _turnPlayer = leaf->turnPlayer == 1 ? 2 : 1;
+	int _result = leaf->board.isWin(_turnPlayer);
+	if (_result == 0) //check for terminal node, 0 is not terminal
 	{
-		float currentUCT= GetUCT(nodes[node]);
-		if (currentUCT > bestUCT)
+		//expand
+		vector<vector<Move>> moves = leaf->board.getAllPossibleMoves(leaf->turnPlayer);
+		for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++)
 		{
-			bestUCT = currentUCT;
-			bestNode = nodes[node];
+			for (int moveNum = 0; moveNum < moves[checkerNum].size(); moveNum++) //for each move
+			{
+				Board childBoard = leaf->board;
+				Move childMove = moves[checkerNum][moveNum];
+				childBoard.makeMove(childMove, leaf->turnPlayer);
+				int childTurnPlayer = _turnPlayer;
+
+				vector<Node> childVector;
+				Node* childParent = leaf;
+
+				leaf->children.push_back(Node(childBoard, childMove, childTurnPlayer, 0, 0, childVector, childParent));
+			}
 		}
+		//selection step
+		leaf = SelectionStep(leaf);
 	}
-	return bestNode;
+	return leaf;
 }
 
-int StudentAI::Simulate(Board boardCopy, Move move, int turnPlayer)
+int StudentAI::Simulate(Node* child)
 {
-	boardCopy.makeMove(move, player);
-	int result = boardCopy.isWin(player); //2 = white, 1 = black, -1 = tie, 0 = undetermined
+	Board boardCopy = child->board;
+	int _turnPlayer = child->turnPlayer == 1 ? 2 : 1;
+	int result = boardCopy.isWin(_turnPlayer); //2 = white, 1 = black, -1 = tie, 0 = undetermined
+	_turnPlayer = _turnPlayer == 1 ? 2 : 1;
 	vector<vector<Move>> possibleMoves;
 	while (result == 0) //repeat until result is determined
 	{
 
-		possibleMoves = boardCopy.getAllPossibleMoves(turnPlayer);
+		possibleMoves = boardCopy.getAllPossibleMoves(_turnPlayer);
 		int x = rand() % (possibleMoves.size());
 		vector<Move> checker_moves = possibleMoves[x];
 		int y = rand() % (checker_moves.size());
 		Move randMove = checker_moves[y];
 
-		boardCopy.makeMove(randMove, turnPlayer);
+		boardCopy.makeMove(randMove, _turnPlayer);
 
 
-		result = boardCopy.isWin(turnPlayer);
-		turnPlayer = turnPlayer == 1 ? 2 : 1;//switch turn after check for win
+		result = boardCopy.isWin(_turnPlayer);
+		_turnPlayer = _turnPlayer == 1 ? 2 : 1;//switch turn after check for win
 	}
 	return result;
 }
 
-void StudentAI::BackPropagate(int result, Node node)
+void StudentAI::BackPropagate(int result, Node* child) //assume parent is root node
 {
 	//1 == a player won, 2 == a player won, -1 = tie, 0 = none
 
-
-
+	while (child != nullptr)
+	{
+		//update result
+		if (child->turnPlayer == player) //node belongs to us
+		{
+			if (result == player)
+			{
+				child->playOuts += 1;
+			}
+			else if (result == -1)
+			{
+				child->playOuts += 1;
+			}
+			else if (result == player == 1 ? 2 : 1)
+			{
+				child->winsOther += 1;
+				child->playOuts += 1;
+			}
+		}
+		else //node belongs to other player
+		{
+			if (result == player)
+			{
+				child->winsOther += 1;
+				child->playOuts += 1;
+			}
+			else if (result == -1)
+			{
+				child->winsOther += 0.5f;
+				child->playOuts += 1;
+			}
+			else if (result == player == 1 ? 2 : 1)
+			{
+				child->playOuts += 1;
+			}
+		}
+		
+		//go up tree
+		child = child->parent;
+	}
 }
 
 Move StudentAI::GetMove(Move move)
@@ -94,51 +160,39 @@ Move StudentAI::GetMove(Move move)
     } else{
         board.makeMove(move,player == 1?2:1);
     }
-
-	vector<Node> nodeVector;
-
-	vector<vector<Move>> moves = board.getAllPossibleMoves(player);
-	for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++)
-	{
-		for (int moveNum = 0; moveNum < moves[checkerNum].size(); moveNum++) //for each move
-		{
-			Board boardCopy = board;
-			Move move = moves[checkerNum][moveNum];
-			boardCopy.makeMove(move, player); //make our move
-			int turnPlayer = player == 1 ? 2 : 1; // opponents turn
-
-			nodeVector.push_back(Node(move, boardCopy, turnPlayer, 0, 0));
-		}
-	}
 	
-	Move bestMove;
-	int  mostWins = -1;
-	{
-		for (int node = 0; node < nodeVector.size(); node++)
-		{
-			int winCount = 0;
-			for (int i = 0; i < 50; i++) //run 50 simulations
-			{
-				
-				int turnPlayerV = nodeVector[node].turnPlayer;
-				Move moveV = nodeVector[node].move;
-				int result = Simulate(board, moveV, turnPlayerV);
+	//set-up root
+	Board _board = board;
+	Move _move = move;
+	int _player = player;
 
-				if (result == player || result == -1)
-				{
-					winCount++;
-				}
-			}
-			//check if move is best so far
-			if (winCount > mostWins)
-			{
-				mostWins = winCount;
-				bestMove = nodeVector[node].move;
-			}
-		}
+	vector<Node> rootVector;
+
+	Node rootNode = Node(_board, _move, _player, 0, 0, rootVector, nullptr);
+
+	Node* root = &rootNode;
+
+	for (int i = 0; i < 100; i++) //run 500 simulations for the turn
+	{
+		Node* leaf = Selection(root);
+		Node* child = Expansion(leaf);
+		int result = Simulate(child);
+		BackPropagate(result, child);
 	}
-	
-	board.makeMove(bestMove,player);
-    return bestMove;
+
+	Node* bestNode;
+	int highestPlayOuts = 0;
+	for (int i = 0; i < root->children.size(); i++) //run 500 simulations for the turn
+	{
+		if (highestPlayOuts < root->children[i].playOuts)
+		{
+			bestNode = &root->children[i];
+			highestPlayOuts = root->children[i].playOuts;
+		}
+		
+	}
+
+	board.makeMove(bestNode->move, player);
+	return bestNode->move;
 }
 
