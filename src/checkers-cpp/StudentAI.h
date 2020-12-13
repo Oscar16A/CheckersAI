@@ -4,8 +4,6 @@
 #include "Board.h"
 #pragma once
 
-//The following part should be completed by students.
-//Students can modify anything except the class name and exisiting functions and varibles.
 struct Node
 {
 	Board board; //current board
@@ -15,24 +13,17 @@ struct Node
 	float winsOther; //win score of other player
 	int playOuts; //number of simulations that passed through this node
 
-	vector<Node> children; //children of this node
-	Node* parent; //parent of this node
+	vector<Node*> children; //children of node
+	Node* parent; // parent node of this node
 	
-	Node() {}
+	//constructors
+	Node();
 
-	Node(Board board_, Move move_, int turnPlayer_, int winsOther_, int playOuts_, vector<Node> children_, Node* parent_)
-	:
-	board(board_),
-	move(move_),
-	turnPlayer(turnPlayer_),
+	Node(Board board_, Move move_, int turnPlayer_, int winsOther_, int playOuts_, vector<Node*> children_, Node* parent_);
+	
+	//destructor
+	~Node();
 
-	winsOther(winsOther_),
-	playOuts(playOuts_),
-
-	children(children_),
-	parent(parent_)
-	{
-	}
 };
 
 class StudentAI :public AI
@@ -42,13 +33,13 @@ public:
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
 	
-private:	
-	Node* Selection(Node* root);
-	Node* SelectionStep(Node* node);
-	float GetUCT(Node& node, float C);
-	Node* Expansion(Node* leaf);
-	int Simulate(Node* child);
-	void BackPropagate(int result, Node* child);
+private:
+	Node& Selection(Node& node);
+	Node& SelectionStep(Node& node);
+	float GetUCT(const Node& node, float C);
+	Node& Expansion(Node& node);
+	int Simulate(Board _board, int _turnPlayer);
+	void BackPropagate(int result, Node* other);
 };
 
 #endif //STUDENTAI_H
