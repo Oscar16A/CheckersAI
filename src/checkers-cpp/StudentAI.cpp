@@ -39,7 +39,7 @@ StudentAI::StudentAI(int col,int row,int p)
 
 Node* StudentAI::Selection(Node* node)
 {
-	if ((node.children.empty()))
+	if ((node->children.empty()))
 	{
 		return node;
 	}
@@ -49,31 +49,31 @@ Node* StudentAI::Selection(Node* node)
 	}
 }
 
-Node& StudentAI::SelectionStep(Node& node)
+Node* StudentAI::SelectionStep(Node* node)
 {
-	if (node.children.empty())
+	if (node->children.empty())
 	{
 		return node;
 	}
 	int bestChildIndex;
 	float bestUCT;
-	for (int i = 0; i < node.children.size(); i++)
+	for (int i = 0; i < node->children.size(); i++)
 	{
-		float currentUCT = GetUCT(*node.children.at(i), 1.4f);
+		float currentUCT = GetUCT(node->children.at(i), 1.4f);
 		if (currentUCT > bestUCT)
 		{
 			bestUCT = currentUCT;
 			bestChildIndex = i;
 		}
 	}
-	return *node.children.at(bestChildIndex);
+	return node->children.at(bestChildIndex);
 }
 
-float StudentAI::GetUCT(const Node& node, float C)//C= 1.4f for selection
+float StudentAI::GetUCT(const Node* node, float C)//C= 1.4f for selection
 {
-	float U = node.winsOther;
-	float N = node.playOuts;
-	float Np = node.parent->playOuts;
+	float U = node->winsOther;
+	float N = node->playOuts;
+	float Np = node->parent->playOuts;
 	if (N != 0)
 	{
 		return (U / N) + (C * sqrt((log(Np) / N)));
@@ -81,21 +81,21 @@ float StudentAI::GetUCT(const Node& node, float C)//C= 1.4f for selection
 	return INFINITY;
 }
 
-Node& StudentAI::Expansion(Node& node)
+Node* StudentAI::Expansion(Node* node)
 {
-	vector<vector<Move>> moves = node.board.getAllPossibleMoves(node.turnPlayer);
+	vector<vector<Move>> moves = node->board.getAllPossibleMoves(node->turnPlayer);
 	for (int checkerNum = 0; checkerNum < moves.size(); checkerNum++) //for each checker
 	{
 		for (int moveNum = 0; moveNum < moves.at(checkerNum).size(); moveNum++) //for each move for each checker
 		{
-			Board childBoard = node.board;
+			Board childBoard = node->board;
 			Move childMove = moves.at(checkerNum).at(moveNum);
-			childBoard.makeMove(childMove, node.turnPlayer);
-			int childTurnPlayer = node.turnPlayer == 1 ? 2 : 1;
+			childBoard.makeMove(childMove, node->turnPlayer);
+			int childTurnPlayer = node->turnPlayer == 1 ? 2 : 1;
 
-			Node *childNode = new Node(childBoard, childMove, childTurnPlayer, 0, 0, vector<Node*>(), &node);
+			Node* childNode = new Node(childBoard, childMove, childTurnPlayer, 0, 0, vector<Node*>(), node);
 
-			node.children.push_back(childNode);
+			node->children.push_back(childNode);
 		}
 	}
 	return SelectionStep(node);
@@ -188,36 +188,38 @@ Move StudentAI::GetMove(Move move)
     }
 
 	//root setup
-	Node root = Node();
-	root.board = board;
-	root.move = move;
-	root.turnPlayer = player;
-	root.winsOther = 0;
-	root.playOuts = 0;
-	root.children = vector<Node*>();
-	root.parent = nullptr;
+	Node* root = new Node(board, move, player, 0, 0, vector<Node*>(), nullptr);
+	//root.board = board;
+	//root.move = move;
+	//root.turnPlayer = player;
+	//root.winsOther = 0;
+	//root.playOuts = 0;
+	//root.children = vector<Node*>();
+	//root.parent = nullptr;
 
 	//Expansion(root);
 
 	for (int i = 0; i < 500; i++) //run 500 simulations for the turn
 	{
 		//Node& leaf = SelectionStep(root.children);
-		Node& leaf = Selection(root);
-		Node& child = Expansion(leaf);
-		int result = Simulate(child.board, child.turnPlayer);
-		BackPropagate(result, &child);
+		Node* leaf = Selection(root);
+		Node* child = Expansion(leaf);
+		int result = Simulate(child->board, child->turnPlayer);
+		BackPropagate(result, child);
 	}
 
 	Move bestMove; //best move among root's children
 	int highestPlayOuts = 0;
-	for (int i = 0; i < root.children.size(); i++) 
+	for (int i = 0; i < root->children.size(); i++) 
 	{
-		if (highestPlayOuts < root.children.at(i)->playOuts)
+		if (highestPlayOuts < root->children.at(i)->playOuts)
 		{
-			bestMove = root.children.at(i)->move;
-			highestPlayOuts = root.children.at(i)->playOuts;
+			bestMove = root->children.at(i)->move;
+			highestPlayOuts = root->children.at(i)->playOuts;
 		}
 	}
+
+	delete root;
 
 	board.makeMove(bestMove, player);
 	return bestMove;

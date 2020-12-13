@@ -34,10 +34,10 @@ public:
 	virtual Move GetMove(Move board);
 	
 private:
-	Node& Selection(Node& node);
-	Node& SelectionStep(Node& node);
-	float GetUCT(const Node& node, float C);
-	Node& Expansion(Node& node);
+	Node* Selection(Node* node);
+	Node* SelectionStep(Node* node);
+	float GetUCT(const Node* node, float C);
+	Node* Expansion(Node* node);
 	int Simulate(Board _board, int _turnPlayer);
 	void BackPropagate(int result, Node* other);
 };
